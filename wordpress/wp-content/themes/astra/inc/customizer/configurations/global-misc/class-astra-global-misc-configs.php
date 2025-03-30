@@ -3,8 +3,6 @@
  * Global Misc Options for Astra Theme.
  *
  * @package     Astra
- * @author      Astra
- * @copyright   Copyright (c) 2022, Astra
  * @link        https://wpastra.com/
  * @since       Astra  4.0.0
  */
@@ -40,6 +38,7 @@ class Astra_Global_Misc_Configs extends Astra_Customizer_Config_Base {
 				'control'  => 'ast-toggle-control',
 				'title'    => __( 'Enable Smooth Scroll to ID', 'astra' ),
 				'section'  => 'section-global-misc',
+				'divider'  => array( 'ast_class' => 'ast-section-spacing' ),
 				'priority' => 10,
 			),
 		);

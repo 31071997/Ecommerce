@@ -3,8 +3,6 @@
  * Styling Options for Astra Theme.
  *
  * @package     Astra
- * @author      Astra
- * @copyright   Copyright (c) 2020, Astra
  * @link        https://wpastra.com/
  * @since       Astra 1.0.15
  */
@@ -139,13 +137,28 @@ if ( ! class_exists( 'Astra_Body_Typo_Configs' ) ) {
 					'priority'    => 15,
 					'lazy'        => true,
 					'title'       => __( 'Font Size', 'astra' ),
-					'suffix'      => 'px',
+					'suffix'      => array( 'px', 'em', 'vw', 'rem' ),
 					'input_attrs' => array(
-						'min' => 0,
-						'max' => 200,
-					),
-					'units'       => array(
-						'px' => 'px',
+						'px'  => array(
+							'min'  => 0,
+							'step' => 1,
+							'max'  => 200,
+						),
+						'em'  => array(
+							'min'  => 0,
+							'step' => 0.01,
+							'max'  => 20,
+						),
+						'vw'  => array(
+							'min'  => 0,
+							'step' => 0.1,
+							'max'  => 25,
+						),
+						'rem' => array(
+							'min'  => 0,
+							'step' => 0.1,
+							'max'  => 20,
+						),
 					),
 				),
 

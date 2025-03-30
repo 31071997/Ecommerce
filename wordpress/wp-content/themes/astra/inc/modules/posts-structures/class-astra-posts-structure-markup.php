@@ -3,8 +3,6 @@
  * Hero section layout for Astra theme.
  *
  * @package     Astra
- * @author      Brainstorm Force
- * @copyright   Copyright (c) 2022, Brainstorm Force
  * @link        https://www.brainstormforce.com
  * @since       Astra 4.0.0
  */
@@ -48,7 +46,7 @@ class Astra_Posts_Structure_Markup {
 	 * @return string
 	 */
 	public function astra_archive_custom_title( $title ) {
-		$post_type    = strval( get_post_type() );
+		$post_type    = astra_get_post_type();
 		$custom_title = astra_get_option( 'ast-dynamic-archive-' . $post_type . '-custom-title', '' );
 		$title        = ! empty( $custom_title ) ? $custom_title : $title;
 		return $title;
@@ -61,12 +59,30 @@ class Astra_Posts_Structure_Markup {
 	 * @return void
 	 */
 	public function override_entry_header() {
-		global $post;
-		if ( is_null( $post ) ) {
+
+		if ( is_front_page() && 'page' === get_option( 'show_on_front' ) && astra_get_option( 'ast-dynamic-single-page-disable-structure-meta-on-front-page', false ) ) {
 			return;
 		}
 
-		$post_type = $post->post_type;
+		if ( is_search() ) {
+			if ( true === astra_get_option( 'ast-search-page-title', true ) ) {
+				if ( 'layout-2' === astra_get_option( 'section-search-page-title-layout', 'layout-1' ) ) {
+					$type = 'search';
+
+					do_action( 'astra_before_archive_' . $type . '_banner_content' );
+					get_template_part( 'template-parts/special-banner' );
+					do_action( 'astra_after_archive_' . $type . '_banner_content' );
+
+					remove_action( 'astra_archive_header', 'astra_archive_page_info' );
+					return;
+				}
+			} else {
+				add_filter( 'astra_the_title_enabled', '__return_false' );
+				return;
+			}
+		}
+
+		$post_type = astra_get_post_type();
 		$type      = is_singular( $post_type ) ? 'single' : 'archive';
 
 		$supported_post_types = Astra_Posts_Structure_Loader::get_supported_post_types();

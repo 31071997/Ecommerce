@@ -3,8 +3,6 @@
  * Content Spacing Options for our theme.
  *
  * @package     Astra
- * @author      Brainstorm Force
- * @copyright   Copyright (c) 2020, Brainstorm Force
  * @link        https://www.brainstormforce.com
  * @since       1.3.0
  */
@@ -63,23 +61,8 @@ if ( ! class_exists( 'Astra_Learndash_Sidebar_Configs' ) ) {
 							'path'  => ( class_exists( 'Astra_Builder_UI_Controller' ) ) ? Astra_Builder_UI_Controller::fetch_svg_icon( 'right-sidebar', false ) : '',
 						),
 					),
+					'description'       => __( 'Sidebar will only apply when container layout is set to normal.', 'astra' ),
 					'divider'           => array( 'ast_class' => 'ast-top-section-divider' ),
-				),
-
-				/**
-				 * Help Text: Learndash Sidebar Layout.
-				 */
-				array(
-					'name'     => ASTRA_THEME_SETTINGS . '[learndash-sidebar-layout-description]',
-					'type'     => 'control',
-					'control'  => 'ast-description',
-					'section'  => 'section-leandash-general',
-					'priority' => 5,
-					'title'    => '',
-					'help'     => __( 'Sidebar will only apply when container layout is set to normal.', 'astra' ),
-					'divider'  => array( 'ast_class' => 'ast-bottom-spacing ast-section-divider' ),
-					'settings' => array(),
-					'hide'     => ( ! Astra_Dynamic_CSS::astra_fullwidth_sidebar_support() ),
 				),
 
 				/**

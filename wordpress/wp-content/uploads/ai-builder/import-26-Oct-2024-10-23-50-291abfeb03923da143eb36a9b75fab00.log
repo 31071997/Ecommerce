@@ -1,0 +1,33 @@
+
+There was an error on website: Uncaught Error
+Error: Call to a member function get_gallery_image_ids() on false in D:\wamp64\www\Ecommerce\wordpress\wp-content\plugins\elementor\modules\ai\module.php:349
+Stack trace:
+#0 D:\wamp64\www\Ecommerce\wordpress\wp-includes\class-wp-hook.php(324): Elementor\Modules\Ai\Module->get_product_images_ajax('')
+#1 D:\wamp64\www\Ecommerce\wordpress\wp-includes\class-wp-hook.php(348): WP_Hook->apply_filters('', Array)
+#2 D:\wamp64\www\Ecommerce\wordpress\wp-includes\plugin.php(517): WP_Hook->do_action(Array)
+#3 D:\wamp64\www\Ecommerce\wordpress\wp-admin\admin-ajax.php(192): do_action('wp_ajax_element...')
+#4 {main}
+There was an error on website: Uncaught Error
+Error: Call to a member function get_gallery_image_ids() on false in D:\wamp64\www\Ecommerce\wordpress\wp-content\plugins\elementor\modules\ai\module.php:334
+Stack trace:
+#0 D:\wamp64\www\Ecommerce\wordpress\wp-includes\class-wp-hook.php(324): Elementor\Modules\Ai\Module->get_product_images_ajax('')
+#1 D:\wamp64\www\Ecommerce\wordpress\wp-includes\class-wp-hook.php(348): WP_Hook->apply_filters('', Array)
+#2 D:\wamp64\www\Ecommerce\wordpress\wp-includes\plugin.php(517): WP_Hook->do_action(Array)
+#3 D:\wamp64\www\Ecommerce\wordpress\wp-admin\admin-ajax.php(192): do_action('wp_ajax_element...')
+#4 {main}
+There was an error on website: Uncaught Error
+Error: Call to a member function get_gallery_image_ids() on false in D:\wamp64\www\Ecommerce\wordpress\wp-content\plugins\elementor\modules\ai\module.php:349
+Stack trace:
+#0 D:\wamp64\www\Ecommerce\wordpress\wp-includes\class-wp-hook.php(324): Elementor\Modules\Ai\Module->get_product_images_ajax('')
+#1 D:\wamp64\www\Ecommerce\wordpress\wp-includes\class-wp-hook.php(348): WP_Hook->apply_filters('', Array)
+#2 D:\wamp64\www\Ecommerce\wordpress\wp-includes\plugin.php(517): WP_Hook->do_action(Array)
+#3 D:\wamp64\www\Ecommerce\wordpress\wp-admin\admin-ajax.php(192): do_action('wp_ajax_element...')
+#4 {main}
+There was an error on website: Uncaught Error
+Error: Call to a member function get_gallery_image_ids() on false in D:\wamp64\www\Ecommerce\wordpress\wp-content\plugins\elementor\modules\ai\module.php:334
+Stack trace:
+#0 D:\wamp64\www\Ecommerce\wordpress\wp-includes\class-wp-hook.php(324): Elementor\Modules\Ai\Module->get_product_images_ajax('')
+#1 D:\wamp64\www\Ecommerce\wordpress\wp-includes\class-wp-hook.php(348): WP_Hook->apply_filters('', Array)
+#2 D:\wamp64\www\Ecommerce\wordpress\wp-includes\plugin.php(517): WP_Hook->do_action(Array)
+#3 D:\wamp64\www\Ecommerce\wordpress\wp-admin\admin-ajax.php(192): do_action('wp_ajax_element...')
+#4 {main}

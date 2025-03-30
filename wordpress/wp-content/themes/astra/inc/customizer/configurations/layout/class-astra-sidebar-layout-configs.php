@@ -3,8 +3,6 @@
  * Bottom Footer Options for Astra Theme.
  *
  * @package     Astra
- * @author      Astra
- * @copyright   Copyright (c) 2020, Astra
  * @link        https://wpastra.com/
  * @since       Astra 1.0.0
  */
@@ -43,6 +41,7 @@ if ( ! class_exists( 'Astra_Sidebar_Layout_Configs' ) ) {
 					'section'           => 'section-sidebars',
 					'default'           => astra_get_option( 'site-sidebar-layout' ),
 					'priority'          => 5,
+					'description'       => __( 'Sidebar will only apply when container layout is set to normal.', 'astra' ),
 					'title'             => __( 'Default Layout', 'astra' ),
 					'choices'           => array(
 						'no-sidebar'    => array(
@@ -58,22 +57,6 @@ if ( ! class_exists( 'Astra_Sidebar_Layout_Configs' ) ) {
 							'path'  => ( class_exists( 'Astra_Builder_UI_Controller' ) ) ? Astra_Builder_UI_Controller::fetch_svg_icon( 'right-sidebar', false ) : '',
 						),
 					),
-				),
-
-				/**
-				 * Help Text: Sidebar Layout.
-				 */
-				array(
-					'name'     => ASTRA_THEME_SETTINGS . '[site-sidebar-layout-description]',
-					'type'     => 'control',
-					'control'  => 'ast-description',
-					'section'  => 'section-sidebars',
-					'priority' => 5,
-					'title'    => '',
-					'help'     => __( 'Sidebar will only apply when container layout is set to normal.', 'astra' ),
-					'divider'  => array( 'ast_class' => 'ast-bottom-spacing' ),
-					'settings' => array(),
-					'hide'     => ( ! Astra_Dynamic_CSS::astra_fullwidth_sidebar_support() ),
 				),
 
 				/**
@@ -128,6 +111,20 @@ if ( ! class_exists( 'Astra_Sidebar_Layout_Configs' ) ) {
 					'divider'  => array( 'ast_class' => 'ast-bottom-section-divider' ),
 					'settings' => array(),
 				),
+
+				/**
+				 * Option: Sticky Sidebar
+				 */
+				array(
+					'name'     => ASTRA_THEME_SETTINGS . '[site-sticky-sidebar]',
+					'default'  => astra_get_option( 'site-sticky-sidebar' ),
+					'type'     => 'control',
+					'section'  => 'section-sidebars',
+					'title'    => __( 'Enable Sticky Sidebar', 'astra' ),
+					'priority' => 15,
+					'control'  => 'ast-toggle-control',
+					'divider'  => array( 'ast_class' => 'ast-section-spacing' ),
+				),
 			);
 
 			// Learn More link if Astra Pro is not activated.
@@ -136,6 +133,7 @@ if ( ! class_exists( 'Astra_Sidebar_Layout_Configs' ) ) {
 					'name'     => ASTRA_THEME_SETTINGS . '[ast-sidebar-pro-items]',
 					'type'     => 'control',
 					'control'  => 'ast-upgrade',
+					'campaign' => 'sidebar',
 					'renderAs' => 'list',
 					'choices'  => array(
 						'one'   => array(

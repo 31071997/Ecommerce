@@ -274,6 +274,7 @@ astScrollToTopHandler = function ( masthead, astScrollTop ) {
 		// Add Eventlisteners for Submenu.
 		if (astra_menu_toggle.length > 0) {
 			for (var i = 0; i < astra_menu_toggle.length; i++) {
+				astra_menu_toggle[i].removeEventListener('click', AstraToggleSubMenu);
 				astra_menu_toggle[i].addEventListener('click', AstraToggleSubMenu, false);
 			}
 		}
@@ -290,6 +291,7 @@ astScrollToTopHandler = function ( masthead, astScrollTop ) {
 
 				if ( ! menu_click_listeners_nav[i] ) {
 					menu_click_listeners_nav[i] = menu_toggle_all[i];
+					menu_toggle_all[i].removeEventListener('click', astraNavMenuToggle);
 					menu_toggle_all[i].addEventListener('click', astraNavMenuToggle, false);
 				}
 
@@ -304,6 +306,7 @@ astScrollToTopHandler = function ( masthead, astScrollTop ) {
 					// Add Eventlisteners for Submenu.
 					if (astra_menu_toggle.length > 0) {
 						for (var j = 0; j < astra_menu_toggle.length; j++) {
+							astra_menu_toggle[j].removeEventListener('click', AstraToggleSubMenu);
 							astra_menu_toggle[j].addEventListener('click', AstraToggleSubMenu, false);
 						}
 					}
@@ -450,6 +453,18 @@ astScrollToTopHandler = function ( masthead, astScrollTop ) {
             }
         }
 	}
+	var SearchInputs = document.querySelectorAll( '.search-field' );
+	SearchInputs.forEach(input => {
+		input.addEventListener('focus', function (e) {
+			var sibling = this.parentNode.parentNode.parentNode.querySelector( '.ast-search-menu-icon' );
+			astraToggleClass( sibling, 'ast-dropdown-active' );
+		});
+		input.addEventListener('blur', function (e) {
+			var sibling = this.parentNode.parentNode.parentNode.querySelector( '.ast-search-menu-icon' );
+			sibling.classList.remove( 'ast-dropdown-active' );
+			astraToggleClass( sibling, 'ast-dropdown-active' );
+		});
+	});
 
 	/* Hide Dropdown on body click*/
 	document.body.onclick = function( event ) {
@@ -534,7 +549,7 @@ astScrollToTopHandler = function ( masthead, astScrollTop ) {
             hash = '#';
 
         if( self && ! self.classList.contains('astra-search-icon') ) {
-            var link = new String( self );
+            var link = String( self );
             if( link.indexOf( hash ) !== -1 ) {
             	var link_parent = self.parentNode;
                 if ( document.body.classList.contains('ast-header-break-point') && ! ( document.querySelector("header.site-header").classList.contains("ast-menu-toggle-link") && link_parent.classList.contains("menu-item-has-children") ) ) {
@@ -643,18 +658,18 @@ astScrollToTopHandler = function ( masthead, astScrollTop ) {
 	 *
 	 * @since x.x.x
 	 */
-	 if ( astra.is_scroll_to_id ) {
-		const links = document.querySelectorAll('a[href*="#"]:not([href="#"]):not([href="#0"]):not([href*="uagb-tab"]):not(.uagb-toc-link__trigger)');
-		if (links) {
-
-			for (const link of links) {
-
-				if (link.hash !== "") {
-					link.addEventListener("click", scrollToIDHandler);
-				}
+	if ( astra.is_scroll_to_id ) {
+		// Calculate the offset top of an element, accounting for nested elements.
+		const getOffsetTop = (element) => {
+			let offsetTop = 0;
+			while (element) {
+				offsetTop += element.offsetTop;
+				element = element.offsetParent;
 			}
+			return offsetTop;
 		}
-		function scrollToIDHandler(e) {
+
+		const scrollToIDHandler = (e) => {
 
 			let offset = 0;
 			const siteHeader = document.querySelector('.site-header');
@@ -670,11 +685,11 @@ astScrollToTopHandler = function ( masthead, astScrollTop ) {
 					});
 				}
 
-				const href = this.hash;
+				const href = e.target.closest('a').hash;
 				if (href) {
 					const scrollId = document.querySelector(href);
 					if (scrollId) {
-						const scrollOffsetTop = scrollId.offsetTop - offset;
+						const scrollOffsetTop = getOffsetTop(scrollId) - offset;
 						if( scrollOffsetTop ) {
 							astraSmoothScroll( e, scrollOffsetTop );
 						}
@@ -682,6 +697,49 @@ astScrollToTopHandler = function ( masthead, astScrollTop ) {
 				}
 			}
 		}
+
+		let hashLinks = [];
+		const links = document.querySelectorAll(
+			'a[href*="#"]:not([href="#"]):not([href="#0"]):not([href*="uagb-tab"]):not(.uagb-toc-link__trigger):not(.skip-link):not(.nav-links a):not([href*="tab-"])'
+		);
+		if (links) {
+			for (const link of links) {
+				if (link.href.split("#")[0] !== location.href.split("#")[0]) {
+					// Store the hash
+					hashLinks.push({
+						hash: link.hash,
+						url: link.href.split("#")[0],
+					});
+				} else if (link.hash !== "") {
+					link.addEventListener("click", scrollToIDHandler);
+				}
+			}
+		}
+
+		window.addEventListener('DOMContentLoaded', (event) => {
+			for (let link of hashLinks) {
+				if (window.location.href.split('#')[0] === link.url) {
+					const siteHeader = document.querySelector('.site-header');
+					let offset = 0;
+	
+					// Check and add offset to scroll top if header is sticky.
+					const headerHeight = siteHeader.querySelectorAll('div[data-stick-support]');
+					if (headerHeight) {
+						headerHeight.forEach(single => {
+							offset += single.clientHeight;
+						});
+					}
+					
+					const scrollId = document.querySelector(link.hash);
+					if (scrollId) {
+						const scrollOffsetTop = getOffsetTop(scrollId) - offset;
+						if (scrollOffsetTop) {
+							astraSmoothScroll(event, scrollOffsetTop);
+						}
+					}
+				}
+			}
+		});
 	}
 
 	/**

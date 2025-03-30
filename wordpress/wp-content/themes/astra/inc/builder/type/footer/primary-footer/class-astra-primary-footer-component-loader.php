@@ -3,8 +3,6 @@
  * Primary Footer Styling Loader for Astra theme.
  *
  * @package     Astra Builder
- * @author      Brainstorm Force
- * @copyright   Copyright (c) 2020, Brainstorm Force
  * @link        https://www.brainstormforce.com
  * @since       Astra 3.0.0
  */
@@ -48,7 +46,7 @@ class Astra_Primary_Footer_Component_Loader {
 			'astra-heading-primary-customizer-preview-js',
 			'AstraBuilderPrimaryFooterData',
 			array(
-				'footer_content_width'      => astra_get_option( 'site-content-width' ),
+				'footer_content_width' => astra_get_option( 'site-content-width' ),
 			)
 		);
 	}

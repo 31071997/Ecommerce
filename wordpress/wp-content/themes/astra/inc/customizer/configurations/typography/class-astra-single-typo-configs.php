@@ -3,8 +3,6 @@
  * Styling Options for Astra Theme.
  *
  * @package     Astra
- * @author      Astra
- * @copyright   Copyright (c) 2020, Astra
  * @link        https://wpastra.com/
  * @since       Astra 1.0.15
  */
@@ -46,10 +44,11 @@ if ( ! class_exists( 'Astra_Single_Typo_Configs' ) ) {
 						'name'     => ASTRA_THEME_SETTINGS . '[ast-single-post-items]',
 						'type'     => 'control',
 						'control'  => 'ast-upgrade',
+						'campaign' => 'blog-single',
 						'renderAs' => 'list',
 						'choices'  => array(
 							'one'   => array(
-								'title' => __( 'Author info', 'astra' ),
+								'title' => __( 'Author Box with Social Share', 'astra' ),
 							),
 							'two'   => array(
 								'title' => __( 'Auto load previous posts', 'astra' ),
@@ -77,7 +76,7 @@ if ( ! class_exists( 'Astra_Single_Typo_Configs' ) ) {
 						'default'  => '',
 						'priority' => 999,
 						'context'  => array(),
-						'title'    => __( 'Extensive range of tools to help blog pages stand out', 'astra' ),
+						'title'    => __( 'Extensive range of tools to help blog pages stand out.', 'astra' ),
 						'divider'  => array( 'ast_class' => 'ast-top-section-divider' ),
 					),
 				);

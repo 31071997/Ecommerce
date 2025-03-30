@@ -5,8 +5,6 @@
  * Creates a jQuery color control.
  *
  * @package     Astra
- * @author      Astra
- * @copyright   Copyright (c) 2020, Astra
  * @link        https://wpastra.com/
  * @since       1.0.0
  */
@@ -57,7 +55,7 @@ if ( class_exists( 'WP_Customize_Section' ) ) {
 			$array['instanceNumber'] = $this->instance_number;
 
 			if ( $this->panel ) {
-				$array['customizeAction'] = sprintf( 'Customizing &#9656; %s', esc_html( $this->manager->get_panel( $this->panel )->title ) );
+				$array['customizeAction'] = sprintf( __( 'Customizing &#9656; %s', 'astra' ), esc_html( $this->manager->get_panel( $this->panel )->title ) );
 			} else {
 				$array['customizeAction'] = 'Customizing';
 			}

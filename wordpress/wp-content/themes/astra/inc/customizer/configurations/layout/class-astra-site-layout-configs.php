@@ -3,8 +3,6 @@
  * Site Layout Option for Astra Theme.
  *
  * @package     Astra
- * @author      Astra
- * @copyright   Copyright (c) 2020, Astra
  * @link        https://wpastra.com/
  * @since       Astra 1.0.0
  */
@@ -65,6 +63,7 @@ if ( ! class_exists( 'Astra_Site_Layout_Configs' ) ) {
 					'priority'    => 10,
 					'title'       => __( 'Narrow Container Width', 'astra' ),
 					'suffix'      => 'px',
+					'divider'     => array( 'ast_class' => 'ast-top-section-spacing' ),
 					'input_attrs' => array(
 						'min'  => 400,
 						'step' => 1,

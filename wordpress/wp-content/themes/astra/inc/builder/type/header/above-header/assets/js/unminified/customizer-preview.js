@@ -71,9 +71,27 @@
 	astra_apply_responsive_background_css( 'astra-settings[hba-header-bg-obj-responsive]', '.ast-above-header.ast-above-header-bar', 'desktop' );
 	astra_apply_responsive_background_css( 'astra-settings[hba-header-bg-obj-responsive]', '.ast-above-header.ast-above-header-bar', 'tablet' );
 	astra_apply_responsive_background_css( 'astra-settings[hba-header-bg-obj-responsive]', '.ast-above-header.ast-above-header-bar', 'mobile' );
+	
+	if (document.querySelector(".ast-above-header-wrap .site-logo-img")) {
+	astra_apply_responsive_background_css(
+		"astra-settings[hba-header-bg-obj-responsive]",
+		".ast-sg-element-wrap.ast-sg-logo-section, .ast-above-header.ast-above-header-bar",
+		"desktop"
+	);
+	astra_apply_responsive_background_css(
+		"astra-settings[hba-header-bg-obj-responsive]",
+		".ast-sg-element-wrap.ast-sg-logo-section, .ast-above-header.ast-above-header-bar",
+		"tablet"
+	);
+	astra_apply_responsive_background_css(
+		"astra-settings[hba-header-bg-obj-responsive]",
+		".ast-sg-element-wrap.ast-sg-logo-section, .ast-above-header.ast-above-header-bar",
+		"mobile"
+	);
+}
 
 	// Advanced CSS Generation.
-	astra_builder_advanced_css( 'section-above-header-builder', '.ast-above-header.ast-above-header-bar' );
+	astra_builder_advanced_css( 'section-above-header-builder', '.ast-above-header.ast-above-header-bar, .ast-header-break-point #masthead.site-header .ast-above-header-bar' );
 
     // Advanced Visibility CSS Generation.
 	astra_builder_visibility_css( 'section-above-header-builder', '.ast-above-header-bar', 'grid' );

@@ -24,6 +24,7 @@ class Astra_Gutenberg {
 		}
 
 		add_filter( 'render_block_core/group', array( $this, 'add_inherit_width_group_class' ), 10, 2 );
+		add_filter( 'render_block', array( $this, 'add_iframe_wrapper' ), 10, 2 );
 	}
 
 	/**
@@ -39,9 +40,7 @@ class Astra_Gutenberg {
 		if ( $post_id ) {
 			/** @psalm-suppress RedundantConditionGivenDocblockType */ // phpcs:ignore Generic.Commenting.DocComment.MissingShort
 
-			/** @psalm-suppress UndefinedConstant */ // phpcs:ignore Generic.Commenting.DocComment.MissingShort
-			$current_post = get_post( absint( $post_id ), OBJECT );
-			/** @psalm-suppress UndefinedConstant */ // phpcs:ignore Generic.Commenting.DocComment.MissingShort
+			$current_post = get_post( absint( $post_id ) );
 
 			/** @psalm-suppress TooManyArguments */ // phpcs:ignore Generic.Commenting.DocComment.MissingShort
 			$enable_block_editor_attr = apply_filters( 'astra_disable_block_content_attr', true, $post_id );
@@ -66,7 +65,7 @@ class Astra_Gutenberg {
 	 * @return array       Updated embed markup.
 	 */
 	public function add_ast_block_container( $attr ) {
-		$attr['ast-blocks-layout'] = 'true';
+		$attr['data-ast-blocks-layout'] = 'true';
 		return $attr;
 	}
 
@@ -75,7 +74,6 @@ class Astra_Gutenberg {
 	 * to avoid the group block width from changing to full width.
 	 *
 	 * @since 3.7.1
-	 * @access public
 	 *
 	 * @param string $block_content Rendered block content.
 	 * @param array  $block         Block object.
@@ -110,7 +108,6 @@ class Astra_Gutenberg {
 	 * Add Group block custom class when "Inherit default layout" toggle enabled.
 	 *
 	 * @since 3.8.3
-	 * @access public
 	 *
 	 * @param string $block_content Rendered block content.
 	 * @param array  $block         Block object.
@@ -121,9 +118,6 @@ class Astra_Gutenberg {
 		if (
 			isset( $block['blockName'] ) && isset( $block['attrs']['layout']['inherit'] ) && $block['attrs']['layout']['inherit']
 		) {
-			$block_classgroups    = isset( $block['attrs']['className'] ) ? $block['attrs']['className'] : '';
-			$processed_classnmaes = $block_classgroups . ' inherit-container-width';
-
 			$block_content = preg_replace(
 				'/' . preg_quote( 'class="', '/' ) . '/',
 				'class="inherit-container-width ',
@@ -139,7 +133,6 @@ class Astra_Gutenberg {
 	 * Update the block content with inner div.
 	 *
 	 * @since 3.7.1
-	 * @access public
 	 *
 	 * @param mixed $matches block content.
 	 *
@@ -149,6 +142,51 @@ class Astra_Gutenberg {
 		return $matches[1] . '<div class="wp-block-group__inner-container">' . $matches[2] . '</div>' . $matches[3];
 	}
 
+	/**
+	 * Add iframe wrapper for videos.
+	 *
+	 * @since 4.4.0
+	 *
+	 * @param string $block_content Rendered block content.
+	 * @param array  $block         Block object.
+	 *
+	 * @return string Filtered block content.
+	 */
+	public function add_iframe_wrapper( $block_content, $block ) {
+		$yt_wrapper_with_inner_iframe_regex = '/(ast-oembed-container)/';
+
+		if ( isset( $block['blockName'] ) && 'core/embed' !== $block['blockName'] && 'core/youtube' !== $block['blockName'] ) {
+			return $block_content;
+		}
+
+		/** @psalm-suppress PossiblyUndefinedStringArrayOffset */ // phpcs:ignore Generic.Commenting.DocComment.MissingShort
+		if ( ( ! empty( $block['blockName'] ) && ( 'core/embed' === $block['blockName'] || 'core/youtube' === $block['blockName'] ) ) && ! empty( $block['attrs'] ) && empty( $block['attrs']['url'] ) ) {
+			return $block_content;
+		}
+
+		if ( 1 === preg_match( $yt_wrapper_with_inner_iframe_regex, $block_content ) ) {
+			return $block_content;
+		}
+
+		$video_url     = ! empty( $block['attrs']['url'] ) ? esc_url( $block['attrs']['url'] ) : '';
+		$replace_regex = '/<div\s+class="wp-block-embed__wrapper"\s+>(.*?)<\/div>/s';
+
+		$updated_content = preg_replace_callback(
+			$replace_regex,
+			/**
+			 * Add iframe wrapper for videos.
+			 *
+			 * @param  array $matches Matches.
+			 * @return mixed          Updated content.
+			 */
+			function ( $matches ) use ( $video_url, $block_content, $block ) {
+				return Astra_After_Setup_Theme::get_instance()->responsive_oembed_wrapper( $matches[1], $video_url, array(), true );
+			},
+			$block_content
+		);
+
+		return $updated_content;
+	}
 }
 
 /**

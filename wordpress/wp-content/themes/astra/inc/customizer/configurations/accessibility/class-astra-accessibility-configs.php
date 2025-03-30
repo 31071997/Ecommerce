@@ -3,8 +3,6 @@
  * Accessibility Options for Astra Theme.
  *
  * @package     Astra
- * @author      Astra
- * @copyright   Copyright (c) 2023, Astra
  * @link        https://wpastra.com/
  * @since       Astra 4.1.0
  */
@@ -53,7 +51,7 @@ class Astra_Accessibility_Configs extends Astra_Customizer_Config_Base {
 				'type'     => 'control',
 				'control'  => 'ast-radio-icon',
 				'priority' => 1,
-				'title'    => __( 'Global Highlight Type', 'astra' ),
+				'title'    => __( 'Global Highlight', 'astra' ),
 				'section'  => 'section-accessibility',
 				'choices'  => array(
 					'dotted' => array(
@@ -105,7 +103,7 @@ class Astra_Accessibility_Configs extends Astra_Customizer_Config_Base {
 				'type'     => 'control',
 				'control'  => 'ast-radio-icon',
 				'priority' => 1,
-				'title'    => __( 'Input Highlight Type', 'astra' ),
+				'title'    => __( 'Input Highlight', 'astra' ),
 				'section'  => 'section-accessibility',
 				'choices'  => array(
 					'disable' => array(

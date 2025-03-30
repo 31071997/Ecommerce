@@ -6,8 +6,6 @@
  * All the functions here generate some kind of Markup for the frontend.
  *
  * @package     Astra
- * @author      Astra
- * @copyright   Copyright (c) 2020, Astra
  * @link        https://wpastra.com/
  * @since       Astra 2.5.0
  */
@@ -119,8 +117,9 @@ if ( ! function_exists( 'astra_body_classes' ) ) {
 
 
 		// Sidebar location.
-		$page_layout = 'ast-' . astra_page_layout();
-		$classes[]   = esc_attr( $page_layout );
+		$sidebar_layout = astra_page_layout();
+		$page_layout    = 'ast-' . $sidebar_layout;
+		$classes[]      = esc_attr( $page_layout );
 
 		// Current Astra verion.
 		$classes[] = esc_attr( 'astra-' . ASTRA_THEME_VERSION );
@@ -142,6 +141,18 @@ if ( ! function_exists( 'astra_body_classes' ) ) {
 			if ( 'full' == $header_content_layout ) {
 				$classes[] = 'ast-full-width-primary-header';
 			}
+		}
+
+		// Add class for Sticky Sidebar if activated.
+		if ( 'no-sidebar' !== $sidebar_layout ) {
+			if ( astra_get_option( 'site-sticky-sidebar' ) ) {
+				$classes[] = 'ast-sticky-sidebar';
+			}
+		}
+
+		// Add class for logo svg icon.
+		if ( astra_logo_svg_icon() ) {
+			$classes[] = 'has-logo-svg-icon';
 		}
 
 		return $classes;
@@ -166,6 +177,11 @@ function astra_is_content_style_boxed( $post_id = false ) {
 	$is_boxed             = false;
 	$is_third_party_shop  = false;
 
+	// If post type is empty and is WooCommerce page. Applicable for WC category archives page having no products.
+	if ( ! $post_type && function_exists( 'is_woocommerce' ) && is_woocommerce() ) {
+		$post_type = 'product';
+	}
+
 	// Editor compatibility.
 	if ( $post_id ) {
 		$blog_type          = 'single';
@@ -187,7 +203,7 @@ function astra_is_content_style_boxed( $post_id = false ) {
 		$global_content_style = ( 'default' === $third_party_content_style || empty( $third_party_content_style ) ) ? $global_content_style : $third_party_content_style;
 
 		// Woo Cart & Checkout Page
-		if ( 'woocommerce' === $third_party && ( is_cart() || is_checkout() ) ) {
+		if ( 'woocommerce' === $third_party && ( is_cart() || is_checkout() ) && empty( $meta_content_style ) ) {
 			return ( 'boxed' === $global_content_style );
 		}
 
@@ -220,7 +236,17 @@ function astra_is_content_style_boxed( $post_id = false ) {
 			$is_boxed = false;
 		}
 	}
-	return $is_boxed;
+
+	// Search.
+	if ( is_search() ) {
+		$content_style = astra_get_option( 'ast-search-content-style', '' );
+
+		if ( ! empty( $content_style ) && 'default' !== $content_style ) {
+			$is_boxed = ( 'boxed' === $content_style );
+		}
+	}
+
+	return apply_filters( 'astra_is_content_layout_boxed', $is_boxed );
 }
 
 /**
@@ -232,17 +258,18 @@ function astra_is_content_style_boxed( $post_id = false ) {
  */
 function astra_with_third_party( $is_sidebar_option = false ) {
 
-	$post_type = strval( get_post_type() );
+	$post_type = astra_get_post_type();
 
-	/** @psalm-suppress UndefinedFunction */
+	// @codingStandardsIgnoreStart
+	/**
+	 * @psalm-suppress UndefinedFunction
+	 */
 	if ( class_exists( 'WooCommerce' ) && ( is_woocommerce() || is_checkout() || is_cart() || is_account_page() ) ) {
 		return 'woocommerce';
 	}
-	/** @psalm-suppress UndefinedFunction */
 	elseif ( class_exists( 'Easy_Digital_Downloads' ) && astra_is_edd_page() ) {
 		return 'edd';
 	}
-	/** @psalm-suppress UndefinedFunction */
 	elseif ( class_exists( 'LifterLMS' ) && ( is_lifterlms() || is_llms_account_page() || is_llms_checkout() ) ) {
 		if ( $is_sidebar_option && ( is_lesson() || is_course() ) ) {
 			return 'lifterlms-course-lesson';
@@ -251,6 +278,7 @@ function astra_with_third_party( $is_sidebar_option = false ) {
 	} elseif ( class_exists( 'SFWD_LMS' ) && in_array( $post_type, array( 'sfwd-courses', 'sfwd-lessons', 'sfwd-topic', 'sfwd-quiz', 'sfwd-certificates', 'sfwd-assignment' ) ) ) {
 		return 'learndash';
 	}
+	// @codingStandardsIgnoreEnd
 
 	return false;
 }
@@ -264,12 +292,17 @@ function astra_with_third_party( $is_sidebar_option = false ) {
  */
 function astra_is_sidebar_style_boxed( $post_id = false ) {
 
-	$post_type            = strval( get_post_type() );
+	$post_type            = astra_get_post_type();
 	$blog_type            = is_singular() ? 'single' : 'archive';
 	$global_sidebar_style = astra_get_option( 'site-sidebar-style' );
 	$meta_sidebar_style   = astra_get_option_meta( 'site-sidebar-style', '', true );
 	$is_sidebar_boxed     = false;
 	$is_third_party_shop  = false;
+
+	// If post type is empty and is WooCommerce page. Applicable for WC category archives page having no products.
+	if ( ! $post_type && function_exists( 'is_woocommerce' ) && is_woocommerce() ) {
+		$post_type = 'product';
+	}
 
 	// Editor compatibility.
 	if ( $post_id ) {
@@ -292,7 +325,7 @@ function astra_is_sidebar_style_boxed( $post_id = false ) {
 		$global_sidebar_style = ( 'default' === $third_party_sidebar_style || empty( $third_party_sidebar_style ) ) ? $global_sidebar_style : $third_party_sidebar_style;
 
 		// Woo Cart & Checkout Page
-		if ( 'woocommerce' === $third_party && ( is_cart() || is_checkout() ) ) {
+		if ( 'woocommerce' === $third_party && ( is_cart() || is_checkout() ) && empty( $meta_sidebar_style ) ) {
 			return ( 'boxed' === $global_sidebar_style );
 		}
 
@@ -326,7 +359,15 @@ function astra_is_sidebar_style_boxed( $post_id = false ) {
 		}
 	}
 
-	return $is_sidebar_boxed;
+	// Search.
+	if ( is_search() ) {
+		$sidebar_style = astra_get_option( 'ast-search-sidebar-style', '' );
+		if ( ! empty( $sidebar_style ) && 'default' !== $sidebar_style ) {
+			$is_sidebar_boxed = ( 'boxed' === $sidebar_style );
+		}
+	}
+
+	return apply_filters( 'astra_is_sidebar_layout_boxed', $is_sidebar_boxed );
 }
 
 /**
@@ -421,21 +462,24 @@ function astra_third_party_archive_meta( $option ) {
 		$shop_page_id = get_option( 'woocommerce_shop_page_id' );
 		$meta_value   = get_post_meta( $shop_page_id, $option, true );
 	} elseif ( 'lifterlms' === $third_party ) {
-		/** @psalm-suppress UndefinedFunction */
+		// @codingStandardsIgnoreStart
+		/**
+		 * @psalm-suppress UndefinedFunction
+		 */
 		if ( is_courses() ) {
 			$lifter_page_id = get_option( 'lifterlms_shop_page_id' );
 			$meta_value     = get_post_meta( $lifter_page_id, $option, true );
 		}
-		/** @psalm-suppress UndefinedFunction */
 		elseif ( is_memberships() ) {
 			$lifter_page_id = get_option( 'lifterlms_memberships_page_id' );
 			$meta_value     = get_post_meta( $lifter_page_id, $option, true );
 		} elseif ( is_course_taxonomy() ) {
 			$meta_value = 'default';
 		}
+		// @codingStandardsIgnoreEnd
 	} elseif ( 'edd' === $third_party && astra_is_edd_single_page() ) {
 		$page_id = get_the_ID();
-		/** @psalm-suppress PossiblyFalseArgument */
+		/** @psalm-suppress PossiblyFalseArgument */ // phpcs:ignore Generic.Commenting.DocComment.MissingShort
 		$meta_value = get_post_meta( $page_id, $option, true );
 	}
 
@@ -467,10 +511,11 @@ if ( ! function_exists( 'astra_number_pagination' ) ) {
 		/** @psalm-suppress ArgumentTypeCoercion */ // phpcs:ignore Generic.Commenting.DocComment.MissingShort
 		the_posts_pagination(
 			array(
-				'prev_text'    => astra_default_strings( 'string-blog-navigation-previous', false ),
-				'next_text'    => astra_default_strings( 'string-blog-navigation-next', false ),
-				'taxonomy'     => 'category',
-				'in_same_term' => true,
+				'prev_text'          => astra_default_strings( 'string-blog-navigation-previous', false ),
+				'next_text'          => astra_default_strings( 'string-blog-navigation-next', false ),
+				'taxonomy'           => 'category',
+				'in_same_term'       => true,
+				'screen_reader_text' => esc_html__( 'Post pagination', 'astra' ),
 			)
 		);
 		/** @psalm-suppress ArgumentTypeCoercion */ // phpcs:ignore Generic.Commenting.DocComment.MissingShort
@@ -497,6 +542,7 @@ if ( ! function_exists( 'astra_logo' ) ) {
 	 */
 	function astra_logo( $device = 'desktop', $echo = true ) {
 
+		$logo_svg_icon        = astra_logo_svg_icon();
 		$site_tagline         = astra_get_option( 'display-site-tagline-responsive' );
 		$display_site_tagline = ( $site_tagline['desktop'] || $site_tagline['tablet'] || $site_tagline['mobile'] ) ? true : false;
 		$site_title           = astra_get_option( 'display-site-title-responsive' );
@@ -524,6 +570,10 @@ if ( ! function_exists( 'astra_logo' ) ) {
 			}
 		}
 
+		if ( (bool) $logo_svg_icon ) {
+			$html .= "<a href='" . esc_url( home_url() ) . "'><div class='ast-logo-svg-icon'>{$logo_svg_icon}</div></a>";
+		}
+
 		$html .= astra_get_site_title_tagline( $display_site_title, $display_site_tagline, $device );
 
 		$html = apply_filters( 'astra_logo', $html, $display_site_title, $display_site_tagline );
@@ -532,7 +582,7 @@ if ( ! function_exists( 'astra_logo' ) ) {
 		 * Echo or Return the Logo Markup
 		 */
 		if ( $echo ) {
-			echo $html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			echo do_shortcode( $html ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		} else {
 			return $html;
 		}
@@ -552,6 +602,50 @@ function astra_add_custom_logo_attributes( $html ) {
 }
 
 add_filter( 'get_custom_logo', 'astra_add_custom_logo_attributes' );
+
+/**
+ * Provides the logo svg icon according to the user's selection.
+ *
+ * @return string
+ * @since 4.7.0
+ */
+function astra_logo_svg_icon() {
+
+	if ( ! apply_filters( 'astra_enable_logo_svg_icon', astra_get_option( 'use-logo-svg-icon' ) ) ) {
+		return '';
+	}
+
+	if ( has_custom_logo() ) {
+		return '';
+	}
+
+	$logo_svg_code = '';
+	$logo_svg_icon = astra_get_option( 'logo-svg-icon' );
+
+	if ( ! isset( $logo_svg_icon['value'] ) ) {
+		return $logo_svg_code;
+	}
+
+	switch ( $logo_svg_icon['type'] ) {
+		case 'icon-library':
+			$svg_icons = function_exists( 'astra_get_logo_svg_icons_array' ) ? astra_get_logo_svg_icons_array() : array();
+
+			if ( ! empty( $svg_icons[ $logo_svg_icon['value'] ] ) ) {
+				$logo_svg_code = $svg_icons[ $logo_svg_icon['value'] ]['rendered'];
+			}
+			break;
+
+		case 'custom':
+			$logo_svg_code = $logo_svg_icon['value'];
+			break;
+
+		default:
+			$logo_svg_code = '';
+			break;
+	}
+
+	return $logo_svg_code;
+}
 
 /**
  * Return or echo site logo markup.
@@ -762,12 +856,12 @@ if ( ! function_exists( 'astra_get_custom_html' ) ) {
 	function astra_get_custom_html( $option_name = '' ) {
 
 		$custom_html         = '';
-		$custom_html_content = astra_get_option( $option_name );
+		$custom_html_content = astra_get_i18n_option( $option_name, _x( '%astra%', 'Primary Menu: Custom Menu Text / HTML for Last Item in Menu', 'astra' ) );
 
 		if ( ! empty( $custom_html_content ) ) {
-			$custom_html = '<div class="ast-custom-html">' . do_shortcode( $custom_html_content ) . '</div>';
+			$custom_html = '<div class="ast-custom-html">' . do_shortcode( wp_kses_post( $custom_html_content ) ) . '</div>';
 		} elseif ( current_user_can( 'edit_theme_options' ) ) {
-			$custom_html = '<a href="' . esc_url( admin_url( 'customize.php?autofocus[control]=' . ASTRA_THEME_SETTINGS . '[' . $option_name . ']' ) ) . '">' . __( 'Add Custom HTML', 'astra' ) . '</a>';
+			$custom_html = '<a href="' . esc_url( admin_url( 'customize.php?autofocus[control]=' . ASTRA_THEME_SETTINGS . '[' . $option_name . ']' ) ) . '">' . esc_html__( 'Add Custom HTML', 'astra' ) . '</a>';
 		}
 
 		return $custom_html;
@@ -792,7 +886,7 @@ if ( ! function_exists( 'astra_get_custom_button' ) ) {
 
 		$custom_html    = '';
 		$button_classes = '';
-		$button_text    = astra_get_option( $button_text );
+		$button_text    = astra_get_i18n_option( $button_text, Astra_Builder_Helper::get_translatable_string( $button_text ) );
 		$button_style   = astra_get_option( $button_style );
 		$outside_menu   = astra_get_option( 'header-display-outside-menu' );
 
@@ -800,14 +894,30 @@ if ( ! function_exists( 'astra_get_custom_button' ) ) {
 		$new_tab       = ( $header_button['new_tab'] ? 'target="_blank"' : 'target="_self"' );
 		$link_rel      = ( ! empty( $header_button['link_rel'] ) ? 'rel="' . esc_attr( $header_button['link_rel'] ) . '"' : '' );
 
+		// Check for the multisite with subdirectory and if the subdirectory path is enabled for button links.
+		if ( defined( 'SUBDOMAIN_INSTALL' ) && ! SUBDOMAIN_INSTALL ) {
+			$enable_subdirectory_path = apply_filters( 'astra_enable_subdirectory_path', false );
+			if (
+				$enable_subdirectory_path
+				&& isset( $header_button['url'] ) // Check for URL availability.
+				&& ! str_starts_with( $header_button['url'], 'http' ) // Check for external site link.
+			) {
+				$current_site = get_blog_details();
+				if ( $current_site instanceof WP_Site && $current_site->path ) {
+					$btn_url              = $current_site->path . $header_button['url'];
+					$header_button['url'] = str_replace( '//', '/', $btn_url );
+				}
+			}
+		}
+
 		$button_classes    = ( 'theme-button' === $button_style ? 'ast-button' : 'ast-custom-button' );
 		$outside_menu_item = apply_filters( 'astra_convert_link_to_button', $outside_menu );
 
 		if ( '1' == $outside_menu_item ) {
-			$custom_html = '<a class="ast-custom-button-link" href="' . esc_url( do_shortcode( $header_button['url'] ) ) . '" ' . $new_tab . ' ' . $link_rel . '><div class=' . esc_attr( $button_classes ) . '>' . esc_html( do_shortcode( $button_text ) ) . '</div></a>';
+			$custom_html = '<a class="ast-custom-button-link" href="' . esc_url( do_shortcode( $header_button['url'] ) ) . '" ' . $new_tab . ' ' . $link_rel . '><div class=' . esc_attr( $button_classes ) . '>' . esc_html( do_shortcode( wp_kses_post( $button_text ) ) ) . '</div></a>';
 		} else {
-			$custom_html  = '<a class="ast-custom-button-link" href="' . esc_url( do_shortcode( $header_button['url'] ) ) . '" ' . $new_tab . ' ' . $link_rel . '><div class=' . esc_attr( $button_classes ) . '>' . esc_html( do_shortcode( $button_text ) ) . '</div></a>';
-			$custom_html .= '<a class="menu-link" href="' . esc_url( do_shortcode( $header_button['url'] ) ) . '" ' . $new_tab . ' ' . $link_rel . '>' . esc_html( do_shortcode( $button_text ) ) . '</a>';
+			$custom_html  = '<a class="ast-custom-button-link" href="' . esc_url( do_shortcode( $header_button['url'] ) ) . '" ' . $new_tab . ' ' . $link_rel . '><div class=' . esc_attr( $button_classes ) . '>' . esc_html( do_shortcode( wp_kses_post( $button_text ) ) ) . '</div></a>';
+			$custom_html .= '<a class="menu-link" href="' . esc_url( do_shortcode( $header_button['url'] ) ) . '" ' . $new_tab . ' ' . $link_rel . '>' . esc_html( do_shortcode( wp_kses_post( $button_text ) ) ) . '</a>';
 		}
 
 		return $custom_html;
@@ -892,21 +1002,28 @@ if ( ! function_exists( 'astra_get_small_footer_custom_text' ) ) {
 	 *
 	 * @since 1.0.14
 	 * @param string $option Custom text option name.
-	 * @return mixed         Markup of custom text option.
+	 *
+	 * @return mixed Markup of custom text option.
 	 */
 	function astra_get_small_footer_custom_text( $option = '' ) {
-
 		$output = $option;
 
 		if ( '' != $option ) {
-			$output = astra_get_option( $option );
+			$translatable_strings = array(
+				'footer-sml-section-1-credit' => _x( '%astra%', 'Footer small section 1 credit', 'astra' ),
+				'footer-sml-section-2-credit' => _x( '%astra%', 'Footer small section 2 credit', 'astra' ),
+			);
+	
+			$translated_text = isset( $translatable_strings[ $option ] ) ? $translatable_strings[ $option ] : '%astra%';
+
+			$output = astra_get_i18n_option( $option, $translated_text );
 			$output = str_replace( '[current_year]', date_i18n( 'Y' ), $output );
 			$output = str_replace( '[site_title]', '<span class="ast-footer-site-title">' . get_bloginfo( 'name' ) . '</span>', $output );
 
 			$theme_author = apply_filters(
 				'astra_theme_author',
 				array(
-					'theme_name'       => __( 'Astra WordPress Theme', 'astra' ),
+					'theme_name'       => 'Astra ' . esc_html__( 'WordPress Theme', 'astra' ),
 					'theme_author_url' => 'https://wpastra.com/',
 				)
 			);
@@ -914,7 +1031,7 @@ if ( ! function_exists( 'astra_get_small_footer_custom_text' ) ) {
 			$output = str_replace( '[theme_author]', '<a href="' . esc_url( $theme_author['theme_author_url'] ) . '">' . $theme_author['theme_name'] . '</a>', $output );
 		}
 
-		return do_shortcode( $output );
+		return do_shortcode( wp_kses_post( $output ) );
 	}
 }
 
@@ -972,11 +1089,13 @@ if ( ! function_exists( 'astra_header_markup' ) ) {
 		?>
 		<header
 		<?php
-				echo astra_attr(
-					'header',
-					array(
-						'id'    => 'masthead',
-						'class' => join( ' ', astra_get_header_classes() ),
+				echo wp_kses_post(
+					astra_attr(
+						'header',
+						array(
+							'id'    => 'masthead',
+							'class' => join( ' ', astra_get_header_classes() ),
+						)
 					)
 				);
 		?>
@@ -1017,10 +1136,12 @@ if ( ! function_exists( 'astra_site_branding_markup' ) ) {
 		<div class="site-branding">
 			<div
 			<?php
-				echo astra_attr(
-					'site-identity',
-					array(
-						'class' => 'ast-site-identity',
+				echo wp_kses_post(
+					astra_attr(
+						'site-identity',
+						array(
+							'class' => 'ast-site-identity',
+						)
 					)
 				);
 			?>
@@ -1194,13 +1315,17 @@ if ( ! function_exists( 'astra_primary_navigation_markup' ) ) {
 				echo '<div ' . astra_attr( 'ast-main-header-bar-alignment' ) . '>';
 					echo '<div class="main-header-bar-navigation ast-flex-1">';
 						echo '<nav ';
-						echo astra_attr(
-							'site-navigation',
-							array(
-								'id' => 'primary-site-navigation',
+						echo wp_kses_post(
+							astra_attr(
+								'site-navigation',
+								array(
+									'id'         => 'primary-site-navigation',
+									'class'      => 'site-navigation ast-flex-grow-1 navigation-accessibility',
+									'aria-label' => esc_attr__( 'Site Navigation', 'astra' ),
+								)
 							)
 						);
-						echo ' class="site-navigation ast-flex-grow-1 navigation-accessibility" aria-label="' . esc_attr__( 'Site Navigation', 'astra' ) . '">';
+						echo '>';
 							wp_page_menu( $fallback_menu_args );
 						echo '</nav>';
 					echo '</div>';
@@ -1216,7 +1341,7 @@ add_action( 'astra_masthead_content', 'astra_primary_navigation_markup', 10 );
 /**
  * Add CSS classes for all menu links inside WP Nav menu items.
  *
- * Right now, if Addon is active we add 'menu-link' class through walker_nav_menu_start_el, but if only theme is being used no clas is assigned to anchors.
+ * Right now, if Addon is active we add 'menu-link' class through walker_nav_menu_start_el, but if only theme is being used no class is assigned to anchors.
  *
  * As we are replacing tag based selector assets to class selector, adding 'menu-link' selector to all anchors inside menu items.
  * Ex. .main-header-menu a => .main-header-menu .menu-link
@@ -1314,11 +1439,13 @@ if ( ! function_exists( 'astra_footer_markup' ) ) {
 
 		<footer
 		<?php
-				echo astra_attr(
-					'footer',
-					array(
-						'id'    => 'colophon',
-						'class' => join( ' ', astra_get_footer_classes() ),
+				echo wp_kses_post(
+					astra_attr(
+						'footer',
+						array(
+							'id'    => 'colophon',
+							'class' => join( ' ', astra_get_footer_classes() ),
+						)
 					)
 				);
 		?>
@@ -1509,15 +1636,29 @@ if ( ! function_exists( 'astra_comment_form_default_fields_markup' ) ) {
 		$req       = get_option( 'require_name_email' );
 		$aria_req  = ( $req ? " aria-required='true'" : '' );
 
+		// Comment form default labels without '*' symbol.
+		$name_label    = astra_default_strings( 'string-comment-label-name', false );
+		$email_label   = astra_default_strings( 'string-comment-label-email', false );
+		$website_label = astra_default_strings( 'string-comment-label-website', false );
+
+		// Add '*' symbol for required fields.
+		if ( $req ) {
+			$name_label  .= '*';
+			$email_label .= '*';
+		}
+
 		$fields['author'] = '<div class="ast-comment-formwrap ast-row"><p class="comment-form-author ' . astra_attr( 'comment-form-grid-class' ) . '">' .
-					'<label for="author" class="screen-reader-text">' . esc_html( astra_default_strings( 'string-comment-label-name', false ) ) . '</label><input id="author" name="author" type="text" value="' . esc_attr( $commenter['comment_author'] ) .
-					'" placeholder="' . esc_attr( astra_default_strings( 'string-comment-label-name', false ) ) . '" size="30"' . $aria_req . ' /></p>';
-		$fields['email']  = '<p class="comment-form-email ' . astra_attr( 'comment-form-grid-class' ) . '">' .
-					'<label for="email" class="screen-reader-text">' . esc_html( astra_default_strings( 'string-comment-label-email', false ) ) . '</label><input id="email" name="email" type="text" value="' . esc_attr( $commenter['comment_author_email'] ) .
-					'" placeholder="' . esc_attr( astra_default_strings( 'string-comment-label-email', false ) ) . '" size="30"' . $aria_req . ' /></p>';
-		$fields['url']    = '<p class="comment-form-url ' . astra_attr( 'comment-form-grid-class' ) . '"><label for="url">' .
-					'<label for="url" class="screen-reader-text">' . esc_html( astra_default_strings( 'string-comment-label-website', false ) ) . '</label><input id="url" name="url" type="text" value="' . esc_url( $commenter['comment_author_url'] ) .
-					'" placeholder="' . esc_attr( astra_default_strings( 'string-comment-label-website', false ) ) . '" size="30" /></label></p></div>';
+		'<label for="author" class="screen-reader-text">' . esc_html( $name_label ) . '</label><input id="author" name="author" type="text" value="' . esc_attr( $commenter['comment_author'] ) .
+		'" placeholder="' . esc_attr( $name_label ) . '" size="30"' . $aria_req . ' autocomplete="name" /></p>';
+	
+		$fields['email'] = '<p class="comment-form-email ' . astra_attr( 'comment-form-grid-class' ) . '">' .
+		'<label for="email" class="screen-reader-text">' . esc_html( $email_label ) . '</label><input id="email" name="email" type="text" value="' . esc_attr( $commenter['comment_author_email'] ) .
+		'" placeholder="' . esc_attr( $email_label ) . '" size="30"' . $aria_req . ' autocomplete="email" /></p>';
+	
+		$fields['url'] = '<p class="comment-form-url ' . astra_attr( 'comment-form-grid-class' ) . '"><label for="url">' .
+		'<label for="url" class="screen-reader-text">' . esc_html( $website_label ) . '</label><input id="url" name="url" type="text" value="' . esc_url( $commenter['comment_author_url'] ) .
+		'" placeholder="' . esc_attr( $website_label ) . '" size="30" autocomplete="url" /></label></p></div>';
+	
 
 		return apply_filters( 'astra_comment_form_default_fields_markup', $fields );
 	}
@@ -1575,12 +1716,18 @@ if ( ! function_exists( 'astra_the_excerpt' ) ) {
 		$excerpt_type = apply_filters( 'astra_excerpt_type', astra_get_option( 'blog-post-content' ) );
 
 		do_action( 'astra_the_excerpt_before', $excerpt_type );
-
-		if ( 'full-content' === $excerpt_type ) {
-			the_content();
-		} else {
-			the_excerpt();
-		}
+		?>
+			<div class="ast-excerpt-container ast-blog-single-element">
+				<?php
+				if ( 'full-content' === $excerpt_type ) {
+					the_content();
+				} else {
+					the_excerpt();
+					add_filter( 'excerpt_more', '__return_false' );
+				}
+				?>
+			</div>
+		<?php
 
 		do_action( 'astra_the_excerpt_after', $excerpt_type );
 	}
@@ -1751,6 +1898,7 @@ if ( ! function_exists( 'astra_get_post_thumbnail' ) ) {
 		$output = '';
 
 		$check_is_singular = is_singular();
+		$check_is_archive  = ( is_archive() || is_search() || is_home() );
 
 		$featured_image = true;
 		$post_type      = strval( get_post_type() );
@@ -1759,6 +1907,11 @@ if ( ! function_exists( 'astra_get_post_thumbnail' ) ) {
 			$is_featured_image = astra_get_option_meta( 'ast-featured-img' );
 		} else {
 			$is_featured_image = astra_get_option( 'ast-featured-img' );
+		}
+
+		$featured_image_size = 'large';
+		if ( $check_is_archive ) {
+			$featured_image_size = astra_get_option( 'blog-image-size', 'large' );
 		}
 
 		if ( 'disabled' === $is_featured_image ) {
@@ -1774,11 +1927,12 @@ if ( ! function_exists( 'astra_get_post_thumbnail' ) ) {
 
 			if ( $featured_image && ( ! ( $check_is_singular ) || ( ! post_password_required() && ! is_attachment() && has_post_thumbnail() ) ) ) {
 
+				$image_size = $check_is_singular ? astra_get_option( 'ast-dynamic-single-' . $post_type . '-article-featured-image-size', 'large' ) : $featured_image_size;
 				$post_thumb = apply_filters(
 					'astra_featured_image_markup',
 					get_the_post_thumbnail(
 						get_the_ID(),
-						apply_filters( 'astra_post_thumbnail_default_size', 'large' ),
+						apply_filters( 'astra_post_thumbnail_default_size', $image_size ),
 						apply_filters( 'astra_post_thumbnail_itemprop', '' )
 					)
 				);
@@ -1860,6 +2014,9 @@ if ( ! function_exists( 'astra_replace_header_attr' ) ) :
 				$existing_classes = isset( $attr['class'] ) ? $attr['class'] : '';
 				$attr['class']    = $existing_classes . ' astra-logo-svg';
 			}
+			if ( 'gif' === $file_extension ) {
+				$attr['srcset'] = $attachment->guid;
+			}
 		}
 
 		if ( apply_filters( 'astra_is_retina_logo_attachment', $is_logo_attachment, $attachment ) ) {
@@ -1930,7 +2087,7 @@ if ( ! function_exists( 'astra_get_theme_name' ) ) :
 	 */
 	function astra_get_theme_name() {
 
-		$theme_name = __( 'Astra', 'astra' );
+		$theme_name = 'Astra';
 
 		return apply_filters( 'astra_theme_name', $theme_name );
 	}
@@ -1946,7 +2103,7 @@ if ( ! function_exists( 'astra_get_addon_name' ) ) :
 	 */
 	function astra_get_addon_name() {
 
-		$pro_name = __( 'Astra Pro', 'astra' );
+		$pro_name = 'Astra Pro';
 		// If addon is not updated & White Label added for Addon then show the updated addon name.
 		if ( class_exists( 'Astra_Ext_White_Label_Markup' ) ) {
 
@@ -1967,7 +2124,7 @@ endif;
 function astra_post_navigation_template() {
 
 	$new_template = '
-	        <nav class="navigation %1$s" role="navigation" aria-label="%4$s">
+	        <nav class="navigation %1$s" aria-label="%4$s">
 	                <span class="screen-reader-text">%2$s</span>
 	                <div class="nav-links">%3$s</div>
 	        </nav>';
@@ -1996,7 +2153,7 @@ add_action( 'activate_elementor/elementor.php', 'astra_skip_elementor_onboarding
 
 
 /**
- * BBPress Multiple user profile compatibility issue.
+ * BBPress & BuddyPress Multiple user profile compatibility issue.
  *
  * @param bool $value For checking this issue is still persist or not.
  *
@@ -2010,6 +2167,14 @@ function astra_bbpress_issue( $value ) {
 		/** @psalm-suppress InvalidArgument */ // phpcs:ignore Generic.Commenting.DocComment.MissingShort
 			return false;
 	}
+
+	// BuddyPress login page looping issue resolution
+	if ( function_exists( 'buddypress' ) && is_buddypress() ) {
+		/** @psalm-suppress UndefinedFunction  */ // phpcs:ignore Generic.Commenting.DocComment.MissingShort
+		/** @psalm-suppress InvalidArgument */ // phpcs:ignore Generic.Commenting.DocComment.MissingShort
+			return false;
+	}
+
 	return $value;
 }
 
@@ -2038,3 +2203,104 @@ function astra_render_header_svg_mask() {
 }
 
 add_action( 'wp_footer', 'astra_render_header_svg_mask' );
+
+/**
+ * Render Featured Image for single post at 'astra_entry_before' hook before post <article>
+ *
+ * @since 4.4.0
+ */
+function astra_single_post_entry_featured_image() {
+	$post_type           = strval( get_post_type() );
+	$featured_image_size = astra_get_option( 'ast-dynamic-single-' . $post_type . '-article-featured-image-size', 'large' );
+
+	if ( apply_filters( 'astra_post_featured_image_condition', ( has_post_thumbnail() ) ) ) {
+		do_action( 'astra_article_featured_image_before' );
+
+		$output     = '';
+		$post_thumb = apply_filters(
+			'astra_article_featured_image_markup',
+			get_the_post_thumbnail(
+				/** @psalm-suppress InvalidArgument */ // phpcs:ignore Generic.Commenting.DocComment.MissingShort
+				absint( astra_get_post_id() ),
+				/** @psalm-suppress InvalidArgument */ // phpcs:ignore Generic.Commenting.DocComment.MissingShort
+				apply_filters( 'astra_post_featured_image_default_size', $featured_image_size ),
+				apply_filters( 'astra_post_featured_image_itemprop', '' )
+			)
+		);
+		if ( '' != $post_thumb ) {
+			$featured_image_width = 'layout-1' === astra_get_option( 'ast-dynamic-single-' . $post_type . '-layout', 'layout-1' ) ? astra_get_option( 'ast-dynamic-single-' . $post_type . '-article-featured-image-width-type', 'wide' ) : '';
+			$output              .= '<div class="ast-single-post-featured-section post-thumb ast-article-image-container--' . esc_attr( $featured_image_width ) . '">';
+			$output              .= $post_thumb;
+			$output              .= '</div>';
+		}
+
+		$output = apply_filters( 'astra_featured_post_thumbnail', $output );
+		echo wp_kses_post( $output );
+
+		do_action( 'astra_article_featured_image_after' );
+	}
+}
+
+/**
+ * Prepare rendering Featured Image for single post at 'astra_header_after' hook after header.
+ * Required on single post only.
+ *
+ * @since 4.4.0
+ */
+function astra_setup_article_featured_image() {
+	if ( ! is_singular() ) {
+		return;
+	}
+
+	$post_type = strval( get_post_type() );
+
+	if ( ( 'disabled' === astra_get_option_meta( 'ast-featured-img' ) && Astra_Dynamic_CSS::astra_4_6_2_compatibility() ) || false === astra_get_option( 'ast-single-' . $post_type . '-title' ) ) {
+
+		/**
+		 * Bail early if featured image option "Show featured image in the posts lists only, but hide it in the single post view." is enabled.
+		 *
+		 * @since 4.6.2
+		 */
+		return;
+	}
+
+	$banner_title_layout = astra_get_option( 'ast-dynamic-single-' . $post_type . '-layout', 'layout-1' );
+	$single_structure    = astra_get_option( 'ast-dynamic-single-' . $post_type . '-structure', astra_get_option( 'ast-dynamic-single-' . $post_type . '-structure', 'page' === $post_type ? array( 'ast-dynamic-single-' . $post_type . '-image', 'ast-dynamic-single-' . $post_type . '-title' ) : array( 'ast-dynamic-single-' . $post_type . '-title', 'ast-dynamic-single-' . $post_type . '-meta' ) ) );
+
+	if ( ! in_array( 'ast-dynamic-single-' . $post_type . '-image', $single_structure ) ) {
+		return;
+	}
+
+	if ( 'layout-1' === $banner_title_layout ) {
+		$article_featured_image_position = astra_get_option( 'ast-dynamic-single-' . $post_type . '-article-featured-image-position-layout-1', 'behind' );
+	} else {
+		$article_featured_image_position = astra_get_option( 'ast-dynamic-single-' . $post_type . '-article-featured-image-position-layout-2', 'none' );
+	}
+
+	if ( 'none' !== $article_featured_image_position ) {
+		add_action( 'astra_entry_before', 'astra_single_post_entry_featured_image' );
+	}
+}
+
+add_action( 'astra_header_after', 'astra_setup_article_featured_image' );
+
+/**
+ * Add aria-expanded attribute to menu items that have submenus.
+ *
+ * @since 4.6.15
+ * @param string $output The HTML output of the menu item.
+ * @param object $item Menu item data object.
+ * @param int    $depth Depth of the current menu item.
+ * @param array  $args An array of arguments.
+ *
+ * @return string $output Menu item markup output.
+ */
+function astra_add_aria_expanded_submenu_items_attr( $output, $item, $depth, $args ) {
+	$classes = empty( $item->classes ) ? array() : (array) $item->classes; // forming classes array if string.
+	if ( in_array( 'menu-item-has-children', $classes ) ) {
+		$output = str_replace( '<a', '<a aria-expanded="false"', $output );
+	}
+	return $output;
+}
+
+add_filter( 'walker_nav_menu_start_el', 'astra_add_aria_expanded_submenu_items_attr', 10, 4 );

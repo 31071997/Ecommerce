@@ -3,8 +3,6 @@
  * Astra Theme Customizer Configuration Builder.
  *
  * @package     astra-builder
- * @author      Astra
- * @copyright   Copyright (c) 2020, Astra
  * @link        https://wpastra.com/
  * @since       3.0.0
  */
@@ -34,9 +32,7 @@ class Astra_Header_Html_Component_Configs extends Astra_Customizer_Config_Base {
 	 * @return Array Astra Customizer Configurations with updated configurations.
 	 */
 	public function register_configuration( $configurations, $wp_customize ) {
-
-		$configurations = Astra_Html_Component_Configs::register_configuration( $configurations, 'header', 'section-hb-html-' );
-
+		$configurations = astra_header_html_configuration( $configurations );
 		return $configurations;
 	}
 }

@@ -3,8 +3,6 @@
  * Post Meta Box
  *
  * @package     Astra
- * @author      Astra
- * @copyright   Copyright (c) 2020, Astra
  * @link        https://wpastra.com/
  * @since       Astra 1.0.0
  */
@@ -116,13 +114,7 @@ if ( ! class_exists( 'Astra_Meta_Boxes' ) ) {
 			$post_id   = get_the_ID();
 
 			if ( 'fl-theme-layout' === $post_type && $post_id ) {
-
-				$template_type = get_post_meta( $post_id, '_fl_theme_layout_type', true );
-
-				if ( ! ( 'archive' === $template_type || 'singular' === $template_type || '404' === $template_type ) ) {
-
 					remove_meta_box( 'astra_settings_meta_box', 'fl-theme-layout', 'side' );
-				}
 			}
 		}
 
@@ -238,7 +230,7 @@ if ( ! class_exists( 'Astra_Meta_Boxes' ) ) {
 					'sfwd-lessons',
 					'sfwd-topic',
 					'groups',
-				) 
+				)
 			) : '';
 			$show_meta_field         = ! self::is_bb_themer_layout();
 			$old_meta_layout         = isset( $meta['site-content-layout']['default'] ) ? $meta['site-content-layout']['default'] : '';
@@ -282,7 +274,7 @@ if ( ! class_exists( 'Astra_Meta_Boxes' ) ) {
 						break;
 				}
 			}
-				
+
 			/**
 			 * Option: Content Layout.
 			 */
@@ -531,21 +523,27 @@ if ( ! class_exists( 'Astra_Meta_Boxes' ) ) {
 						break;
 
 					case 'FILTER_DEFAULT':
-							$meta_value = filter_input( INPUT_POST, $key, FILTER_DEFAULT ); // phpcs:ignore WordPressVIPMinimum.Security.PHPFilterFunctions.RestrictedFilter -- Default filter after all other cases, keeping this filter for backward compatibility of PRO options.
+						/**
+						 * @psalm-suppress TooManyArguments
+						 * @psalm-suppress PossiblyInvalidArgument
+						 */
+						$meta_value = apply_filters( 'astra_php_default_filter_input', ! empty( $_POST[ $key ] ) ? sanitize_text_field( wp_unslash( $_POST[ $key ] ) ) : '', $key );
+						/** @psalm-suppress PossiblyInvalidArgument */
 						break;
+						
 				}
 
 				// Store values.
 				if ( $meta_value ) {
 					update_post_meta( $post_id, $key, $meta_value );
 
-					// Update meta key (flag) as old user migration is already completed at this point. 
+					// Update meta key (flag) as old user migration is already completed at this point.
 					update_post_meta( $post_id, 'astra-migrate-meta-layouts', 'set' );
 				} else {
 
 					/** @psalm-suppress InvalidArgument */
 					delete_post_meta( $post_id, $key );
-				}           
+				}
 			}
 
 		}
@@ -596,6 +594,7 @@ if ( ! class_exists( 'Astra_Meta_Boxes' ) ) {
 			wp_enqueue_style( 'astra-meta-box', $css_uri . '/metabox' . $file_prefix . '.css', array(), ASTRA_THEME_VERSION );
 
 			wp_enqueue_script( 'astra-meta-settings' );
+			wp_set_script_translations( 'astra-meta-settings', 'astra' );
 			$astra_ext_extension_class_exists = class_exists( 'Astra_Ext_Extension' ) ? true : false;
 
 			$ast_content_layout_sidebar = false;
@@ -605,6 +604,20 @@ if ( ! class_exists( 'Astra_Meta_Boxes' ) ) {
 					$ast_content_layout_sidebar = true;
 				}
 			}
+
+			$palette_css_var_prefix   = Astra_Global_Palette::get_css_variable_prefix();
+			$apply_new_default_values = astra_button_default_padding_updated();
+			$bg_updated_title         = sprintf(
+				/* translators: 1: Post type, 2: Background string */
+				'%1$s %2$s',
+				ucfirst( strval( $post_type ) ),
+				__( 'Background', 'astra' )
+			);
+			$page_bg_dynamic_title = ( $post_type ? $bg_updated_title : __( 'Page Background', 'astra' ) );
+			$global_palette        = astra_get_option( 'global-color-palette' );
+
+			/* Created a new array specifically designed for storing post types that don't require Astra's meta settings.*/
+			$register_astra_metabox = ! in_array( $post_type, array( 'wp_block' ), true );
 
 			wp_localize_script(
 				'astra-meta-settings',
@@ -633,12 +646,107 @@ if ( ! class_exists( 'Astra_Meta_Boxes' ) ) {
 					'is_bb_themer_layout'            => ! astra_check_is_bb_themer_layout(), // Show page header option only when bb is not activated.
 					'is_addon_activated'             => defined( 'ASTRA_EXT_VER' ) ? true : false,
 					'sticky_addon_enabled'           => ( $astra_ext_extension_class_exists && Astra_Ext_Extension::is_active( 'sticky-header' ) ) ? true : false,
-					'register_astra_metabox'         => apply_filters( 'astra_settings_metabox_register', true ),
+					'register_astra_metabox'         => apply_filters( 'astra_settings_metabox_register', $register_astra_metabox ),
 					'is_hide_contnet_layout_sidebar' => $ast_content_layout_sidebar,
 					'upgrade_pro_link'               => ASTRA_PRO_CUSTOMIZER_UPGRADE_URL,
 					'show_upgrade_notice'            => astra_showcase_upgrade_notices(),
 					// Flag needed to check whether user is old or new, true for old user, false for new.
 					'v4_1_6_migration'               => ( ! Astra_Dynamic_CSS::astra_fullwidth_sidebar_support() ),
+					'color_addon_enabled'            => ( $astra_ext_extension_class_exists && Astra_Ext_Extension::is_active( 'colors-and-background' ) ) ? true : false,
+					'site_page_bg_meta_default'      => array(
+						'desktop' => array(
+							'background-color'      => $apply_new_default_values ? 'var(--ast-global-color-4)' : '',
+							'background-image'      => '',
+							'background-repeat'     => 'repeat',
+							'background-position'   => 'center center',
+							'background-size'       => 'auto',
+							'background-attachment' => 'scroll',
+							'background-type'       => '',
+							'background-media'      => '',
+							'overlay-type'          => '',
+							'overlay-color'         => '',
+							'overlay-opacity'       => '',
+							'overlay-gradient'      => '',
+						),
+						'tablet'  => array(
+							'background-color'      => '',
+							'background-image'      => '',
+							'background-repeat'     => 'repeat',
+							'background-position'   => 'center center',
+							'background-size'       => 'auto',
+							'background-attachment' => 'scroll',
+							'background-type'       => '',
+							'background-media'      => '',
+							'overlay-type'          => '',
+							'overlay-color'         => '',
+							'overlay-opacity'       => '',
+							'overlay-gradient'      => '',
+						),
+						'mobile'  => array(
+							'background-color'      => '',
+							'background-image'      => '',
+							'background-repeat'     => 'repeat',
+							'background-position'   => 'center center',
+							'background-size'       => 'auto',
+							'background-attachment' => 'scroll',
+							'background-type'       => '',
+							'background-media'      => '',
+							'overlay-type'          => '',
+							'overlay-color'         => '',
+							'overlay-opacity'       => '',
+							'overlay-gradient'      => '',
+						),
+					),
+					'content_page_bg_meta_default'   => array(
+						'desktop' => array(
+							'background-color'      => 'var(' . $palette_css_var_prefix . '5)',
+							'background-image'      => '',
+							'background-repeat'     => 'repeat',
+							'background-position'   => 'center center',
+							'background-size'       => 'auto',
+							'background-attachment' => 'scroll',
+							'background-type'       => '',
+							'background-media'      => '',
+							'overlay-type'          => '',
+							'overlay-color'         => '',
+							'overlay-opacity'       => '',
+							'overlay-gradient'      => '',
+						),
+						'tablet'  => array(
+							'background-color'      => 'var(' . $palette_css_var_prefix . '5)',
+							'background-image'      => '',
+							'background-repeat'     => 'repeat',
+							'background-position'   => 'center center',
+							'background-size'       => 'auto',
+							'background-attachment' => 'scroll',
+							'background-type'       => '',
+							'background-media'      => '',
+							'overlay-type'          => '',
+							'overlay-color'         => '',
+							'overlay-opacity'       => '',
+							'overlay-gradient'      => '',
+						),
+						'mobile'  => array(
+							'background-color'      => 'var(' . $palette_css_var_prefix . '5)',
+							'background-image'      => '',
+							'background-repeat'     => 'repeat',
+							'background-position'   => 'center center',
+							'background-size'       => 'auto',
+							'background-attachment' => 'scroll',
+							'background-type'       => '',
+							'background-media'      => '',
+							'overlay-type'          => '',
+							'overlay-color'         => '',
+							'overlay-opacity'       => '',
+							'overlay-gradient'      => '',
+						),
+					),
+					'isWP_5_9'                       => astra_wp_version_compare( '5.8.99', '>=' ),
+					'ast_page_bg_title'              => __( 'Surface Colors', 'astra' ),
+					'page_bg_toggle_options'         => $this->get_page_bg_toggle_options(),
+					'surface_color_help_text'        => __( 'Enabling this option will override global > colors > surface color options', 'astra' ),
+					'page_bg_dynamic_title'          => $page_bg_dynamic_title,
+					'global_color_palette'           => $global_palette,
 				)
 			);
 
@@ -684,7 +792,7 @@ if ( ! class_exists( 'Astra_Meta_Boxes' ) ) {
 					'sfwd-lessons',
 					'sfwd-topic',
 					'groups',
-				) 
+				)
 			);
 			if ( astra_with_third_party() || $exclude_cpt ) {
 				return array(
@@ -871,6 +979,18 @@ if ( ! class_exists( 'Astra_Meta_Boxes' ) ) {
 				'default'  => __( 'Inherit', 'astra' ),
 				'enabled'  => __( 'Enabled', 'astra' ),
 				'disabled' => __( 'Disabled', 'astra' ),
+			);
+		}
+
+		/**
+		 * Get Page Background Toggle Options.
+		 *
+		 * @since 4.4.0
+		 */
+		public function get_page_bg_toggle_options() {
+			return array(
+				'default' => __( 'Inherit', 'astra' ),
+				'enabled' => __( 'Enabled', 'astra' ),
 			);
 		}
 
@@ -1166,8 +1286,391 @@ if ( ! class_exists( 'Astra_Meta_Boxes' ) ) {
 				array(
 					'show_in_rest'  => true,
 					'single'        => true,
+					'default'       => isset( $meta['astra-migrate-meta-layouts']['default'] ) ? $meta['astra-migrate-meta-layouts']['default'] : '',
 					'type'          => 'string',
 					'auth_callback' => '__return_true',
+				)
+			);
+
+			register_post_meta(
+				'',
+				'ast-page-background-enabled',
+				array(
+					'show_in_rest'  => true,
+					'single'        => true,
+					'default'       => 'default',
+					'type'          => 'string',
+					'auth_callback' => '__return_true',
+				)
+			);
+
+			$apply_new_default_values = astra_button_default_padding_updated();
+			register_post_meta(
+				'',
+				'ast-page-background-meta',
+				array(
+					'single'        => true,
+					'type'          => 'object',
+					'auth_callback' => '__return_true',
+					'show_in_rest'  => array(
+						'schema' => array(
+							'type'       => 'object',
+							'properties' => array(
+								'desktop' => array(
+									'type'       => 'object',
+									'properties' => array(
+										'background-color' => array(
+											'type' => 'string',
+										),
+										'background-image' => array(
+											'type' => 'string',
+										),
+										'background-repeat' => array(
+											'type' => 'string',
+										),
+										'background-position' => array(
+											'type' => 'string',
+										),
+										'background-size'  => array(
+											'type' => 'string',
+										),
+										'background-attachment' => array(
+											'type' => 'string',
+										),
+										'background-type'  => array(
+											'type' => 'string',
+										),
+										'background-media' => array(
+											'type' => 'string',
+										),
+										'overlay-type'     => array(
+											'type' => 'string',
+										),
+										'overlay-color'    => array(
+											'type' => 'string',
+										),
+										'overlay-opacity'  => array(
+											'type' => 'string',
+										),
+										'overlay-gradient' => array(
+											'type' => 'string',
+										),
+									),
+								),
+								'tablet'  => array(
+									'type'       => 'object',
+									'properties' => array(
+										'background-color' => array(
+											'type' => 'string',
+										),
+										'background-image' => array(
+											'type' => 'string',
+										),
+										'background-repeat' => array(
+											'type' => 'string',
+										),
+										'background-position' => array(
+											'type' => 'string',
+										),
+										'background-size'  => array(
+											'type' => 'string',
+										),
+										'background-attachment' => array(
+											'type' => 'string',
+										),
+										'background-type'  => array(
+											'type' => 'string',
+										),
+										'background-media' => array(
+											'type' => 'string',
+										),
+										'overlay-type'     => array(
+											'type' => 'string',
+										),
+										'overlay-color'    => array(
+											'type' => 'string',
+										),
+										'overlay-opacity'  => array(
+											'type' => 'string',
+										),
+										'overlay-gradient' => array(
+											'type' => 'string',
+										),
+									),
+								),
+								'mobile'  => array(
+									'type'       => 'object',
+									'properties' => array(
+										'background-color' => array(
+											'type' => 'string',
+										),
+										'background-image' => array(
+											'type' => 'string',
+										),
+										'background-repeat' => array(
+											'type' => 'string',
+										),
+										'background-position' => array(
+											'type' => 'string',
+										),
+										'background-size'  => array(
+											'type' => 'string',
+										),
+										'background-attachment' => array(
+											'type' => 'string',
+										),
+										'background-type'  => array(
+											'type' => 'string',
+										),
+										'background-media' => array(
+											'type' => 'string',
+										),
+										'overlay-type'     => array(
+											'type' => 'string',
+										),
+										'overlay-color'    => array(
+											'type' => 'string',
+										),
+										'overlay-opacity'  => array(
+											'type' => 'string',
+										),
+										'overlay-gradient' => array(
+											'type' => 'string',
+										),
+									),
+								),
+							),
+						),
+					),
+					'default'       => array(
+						'desktop' => array(
+							'background-color'      => $apply_new_default_values ? 'var(--ast-global-color-4)' : '',
+							'background-image'      => '',
+							'background-repeat'     => 'repeat',
+							'background-position'   => 'center center',
+							'background-size'       => 'auto',
+							'background-attachment' => 'scroll',
+							'background-type'       => '',
+							'background-media'      => '',
+							'overlay-type'          => '',
+							'overlay-color'         => '',
+							'overlay-opacity'       => '',
+							'overlay-gradient'      => '',
+						),
+						'tablet'  => array(
+							'background-color'      => '',
+							'background-image'      => '',
+							'background-repeat'     => 'repeat',
+							'background-position'   => 'center center',
+							'background-size'       => 'auto',
+							'background-attachment' => 'scroll',
+							'background-type'       => '',
+							'background-media'      => '',
+							'overlay-type'          => '',
+							'overlay-color'         => '',
+							'overlay-opacity'       => '',
+							'overlay-gradient'      => '',
+						),
+						'mobile'  => array(
+							'background-color'      => '',
+							'background-image'      => '',
+							'background-repeat'     => 'repeat',
+							'background-position'   => 'center center',
+							'background-size'       => 'auto',
+							'background-attachment' => 'scroll',
+							'background-type'       => '',
+							'background-media'      => '',
+							'overlay-type'          => '',
+							'overlay-color'         => '',
+							'overlay-opacity'       => '',
+							'overlay-gradient'      => '',
+						),
+					),
+				)
+			);
+
+			$palette_css_var_prefix = Astra_Global_Palette::get_css_variable_prefix();
+			register_post_meta(
+				'',
+				'ast-content-background-meta',
+				array(
+					'single'        => true,
+					'type'          => 'object',
+					'auth_callback' => '__return_true',
+					'show_in_rest'  => array(
+						'schema' => array(
+							'type'       => 'object',
+							'properties' => array(
+								'desktop' => array(
+									'type'       => 'object',
+									'properties' => array(
+										'background-color' => array(
+											'type' => 'string',
+										),
+										'background-image' => array(
+											'type' => 'string',
+										),
+										'background-repeat' => array(
+											'type' => 'string',
+										),
+										'background-position' => array(
+											'type' => 'string',
+										),
+										'background-size'  => array(
+											'type' => 'string',
+										),
+										'background-attachment' => array(
+											'type' => 'string',
+										),
+										'background-type'  => array(
+											'type' => 'string',
+										),
+										'background-media' => array(
+											'type' => 'string',
+										),
+										'overlay-type'     => array(
+											'type' => 'string',
+										),
+										'overlay-color'    => array(
+											'type' => 'string',
+										),
+										'overlay-opacity'  => array(
+											'type' => 'string',
+										),
+										'overlay-gradient' => array(
+											'type' => 'string',
+										),
+									),
+								),
+								'tablet'  => array(
+									'type'       => 'object',
+									'properties' => array(
+										'background-color' => array(
+											'type' => 'string',
+										),
+										'background-image' => array(
+											'type' => 'string',
+										),
+										'background-repeat' => array(
+											'type' => 'string',
+										),
+										'background-position' => array(
+											'type' => 'string',
+										),
+										'background-size'  => array(
+											'type' => 'string',
+										),
+										'background-attachment' => array(
+											'type' => 'string',
+										),
+										'background-type'  => array(
+											'type' => 'string',
+										),
+										'background-media' => array(
+											'type' => 'string',
+										),
+										'overlay-type'     => array(
+											'type' => 'string',
+										),
+										'overlay-color'    => array(
+											'type' => 'string',
+										),
+										'overlay-opacity'  => array(
+											'type' => 'string',
+										),
+										'overlay-gradient' => array(
+											'type' => 'string',
+										),
+									),
+								),
+								'mobile'  => array(
+									'type'       => 'object',
+									'properties' => array(
+										'background-color' => array(
+											'type' => 'string',
+										),
+										'background-image' => array(
+											'type' => 'string',
+										),
+										'background-repeat' => array(
+											'type' => 'string',
+										),
+										'background-position' => array(
+											'type' => 'string',
+										),
+										'background-size'  => array(
+											'type' => 'string',
+										),
+										'background-attachment' => array(
+											'type' => 'string',
+										),
+										'background-type'  => array(
+											'type' => 'string',
+										),
+										'background-media' => array(
+											'type' => 'string',
+										),
+										'overlay-type'     => array(
+											'type' => 'string',
+										),
+										'overlay-color'    => array(
+											'type' => 'string',
+										),
+										'overlay-opacity'  => array(
+											'type' => 'string',
+										),
+										'overlay-gradient' => array(
+											'type' => 'string',
+										),
+									),
+								),
+							),
+						),
+					),
+					'default'       => array(
+						'desktop' => array(
+							'background-color'      => 'var(' . $palette_css_var_prefix . '5)',
+							'background-image'      => '',
+							'background-repeat'     => 'repeat',
+							'background-position'   => 'center center',
+							'background-size'       => 'auto',
+							'background-attachment' => 'scroll',
+							'background-type'       => '',
+							'background-media'      => '',
+							'overlay-type'          => '',
+							'overlay-color'         => '',
+							'overlay-opacity'       => '',
+							'overlay-gradient'      => '',
+						),
+						'tablet'  => array(
+							'background-color'      => 'var(' . $palette_css_var_prefix . '5)',
+							'background-image'      => '',
+							'background-repeat'     => 'repeat',
+							'background-position'   => 'center center',
+							'background-size'       => 'auto',
+							'background-attachment' => 'scroll',
+							'background-type'       => '',
+							'background-media'      => '',
+							'overlay-type'          => '',
+							'overlay-color'         => '',
+							'overlay-opacity'       => '',
+							'overlay-gradient'      => '',
+						),
+						'mobile'  => array(
+							'background-color'      => 'var(' . $palette_css_var_prefix . '5)',
+							'background-image'      => '',
+							'background-repeat'     => 'repeat',
+							'background-position'   => 'center center',
+							'background-size'       => 'auto',
+							'background-attachment' => 'scroll',
+							'background-type'       => '',
+							'background-media'      => '',
+							'overlay-type'          => '',
+							'overlay-color'         => '',
+							'overlay-opacity'       => '',
+							'overlay-gradient'      => '',
+						),
+					),
 				)
 			);
 		}
@@ -1178,7 +1681,9 @@ if ( ! class_exists( 'Astra_Meta_Boxes' ) ) {
 		 * @since 3.7.8
 		 */
 		public static function post_meta_options() {
-			self::$meta_option = apply_filters(
+			$palette_css_var_prefix   = Astra_Global_Palette::get_css_variable_prefix();
+			$apply_new_default_values = astra_button_default_padding_updated();
+			self::$meta_option        = apply_filters(
 				'astra_meta_box_options',
 				array(
 					'ast-global-header-display'     => array(
@@ -1233,6 +1738,104 @@ if ( ! class_exists( 'Astra_Meta_Boxes' ) ) {
 					),
 					'ast-breadcrumbs-content'       => array(
 						'sanitize' => 'FILTER_SANITIZE_STRING',
+					),
+					'ast-page-background-enabled'   => array(
+						'default'  => 'default',
+						'sanitize' => 'FILTER_DEFAULT',
+					),
+					'ast-page-background-meta'      => array(
+						'default'  => array(
+							'desktop' => array(
+								'background-color'      => $apply_new_default_values ? 'var(--ast-global-color-4)' : '',
+								'background-image'      => '',
+								'background-repeat'     => 'repeat',
+								'background-position'   => 'center center',
+								'background-size'       => 'auto',
+								'background-attachment' => 'scroll',
+								'background-type'       => '',
+								'background-media'      => '',
+								'overlay-type'          => '',
+								'overlay-color'         => '',
+								'overlay-opacity'       => '',
+								'overlay-gradient'      => '',
+							),
+							'tablet'  => array(
+								'background-color'      => '',
+								'background-image'      => '',
+								'background-repeat'     => 'repeat',
+								'background-position'   => 'center center',
+								'background-size'       => 'auto',
+								'background-attachment' => 'scroll',
+								'background-type'       => '',
+								'background-media'      => '',
+								'overlay-type'          => '',
+								'overlay-color'         => '',
+								'overlay-opacity'       => '',
+								'overlay-gradient'      => '',
+							),
+							'mobile'  => array(
+								'background-color'      => '',
+								'background-image'      => '',
+								'background-repeat'     => 'repeat',
+								'background-position'   => 'center center',
+								'background-size'       => 'auto',
+								'background-attachment' => 'scroll',
+								'background-type'       => '',
+								'background-media'      => '',
+								'overlay-type'          => '',
+								'overlay-color'         => '',
+								'overlay-opacity'       => '',
+								'overlay-gradient'      => '',
+							),
+						),
+						'sanitize' => 'FILTER_DEFAULT',
+					),
+					'ast-content-background-meta'   => array(
+						'default'  => array(
+							'desktop' => array(
+								'background-color'      => 'var(' . $palette_css_var_prefix . '5)',
+								'background-image'      => '',
+								'background-repeat'     => 'repeat',
+								'background-position'   => 'center center',
+								'background-size'       => 'auto',
+								'background-attachment' => 'scroll',
+								'background-type'       => '',
+								'background-media'      => '',
+								'overlay-type'          => '',
+								'overlay-color'         => '',
+								'overlay-opacity'       => '',
+								'overlay-gradient'      => '',
+							),
+							'tablet'  => array(
+								'background-color'      => 'var(' . $palette_css_var_prefix . '5)',
+								'background-image'      => '',
+								'background-repeat'     => 'repeat',
+								'background-position'   => 'center center',
+								'background-size'       => 'auto',
+								'background-attachment' => 'scroll',
+								'background-type'       => '',
+								'background-media'      => '',
+								'overlay-type'          => '',
+								'overlay-color'         => '',
+								'overlay-opacity'       => '',
+								'overlay-gradient'      => '',
+							),
+							'mobile'  => array(
+								'background-color'      => 'var(' . $palette_css_var_prefix . '5)',
+								'background-image'      => '',
+								'background-repeat'     => 'repeat',
+								'background-position'   => 'center center',
+								'background-size'       => 'auto',
+								'background-attachment' => 'scroll',
+								'background-type'       => '',
+								'background-media'      => '',
+								'overlay-type'          => '',
+								'overlay-color'         => '',
+								'overlay-opacity'       => '',
+								'overlay-gradient'      => '',
+							),
+						),
+						'sanitize' => 'FILTER_DEFAULT',
 					),
 				)
 			);

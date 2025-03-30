@@ -3,8 +3,6 @@
  * Customizer Partial.
  *
  * @package     Astra
- * @author      Astra
- * @copyright   Copyright (c) 2020, Astra
  * @link        https://wpastra.com/
  * @since       Astra 1.0.0
  */
@@ -78,9 +76,9 @@ if ( ! class_exists( 'Astra_Customizer_Partials' ) ) {
 		 */
 		public static function render_header_main_rt_section_html() {
 
-			$right_section_html = astra_get_option( 'header-main-rt-section-html' );
+			$right_section_html = astra_get_i18n_option( 'header-main-rt-section-html', _x( '%astra%', 'Primary Menu: Custom Menu Text / HTML for Last Item in Menu', 'astra' ) );
 
-			return do_shortcode( $right_section_html );
+			return do_shortcode( wp_kses_post( $right_section_html ) );
 		}
 
 		/**
@@ -91,10 +89,10 @@ if ( ! class_exists( 'Astra_Customizer_Partials' ) ) {
 		 * @return mixed
 		 */
 		public static function render_header_main_rt_section_button_text() {
-			$custom_button_text = astra_get_option( 'header-main-rt-section-button-text' );
+			$custom_button_text = astra_get_i18n_option( 'header-main-rt-section-button-text', _x( '%astra%', 'Primary Menu: Button Text for Last Item in Menu', 'astra' ) );
 
 			$html = '<div class="ast-button"> ' . $custom_button_text . ' </div>';
-			return do_shortcode( $html );
+			return do_shortcode( wp_kses_post( $html ) );
 		}
 
 		/**
@@ -113,7 +111,7 @@ if ( ! class_exists( 'Astra_Customizer_Partials' ) ) {
 
 			$html = astra_get_site_title_tagline( $display_site_title, $display_site_tagline );
 
-			return do_shortcode( $html );
+			return do_shortcode( wp_kses_post( $html ) );
 		}
 
 		/**
@@ -126,7 +124,7 @@ if ( ! class_exists( 'Astra_Customizer_Partials' ) ) {
 		public static function render_footer_sml_section_1_credit() {
 
 			$output = astra_get_small_footer_custom_text( 'footer-sml-section-1-credit' );
-			return do_shortcode( $output );
+			return do_shortcode( wp_kses_post( $output ) );
 		}
 
 		/**
@@ -139,7 +137,7 @@ if ( ! class_exists( 'Astra_Customizer_Partials' ) ) {
 		public static function render_footer_sml_section_2_credit() {
 
 			$output = astra_get_small_footer_custom_text( 'footer-sml-section-2-credit' );
-			return do_shortcode( $output );
+			return do_shortcode( wp_kses_post( $output ) );
 		}
 
 		/**
@@ -152,7 +150,7 @@ if ( ! class_exists( 'Astra_Customizer_Partials' ) ) {
 		public static function mobile_toggle_menu() {
 
 			$output = astra_masthead_toggle_buttons_primary();
-			return do_shortcode( $output );
+			return do_shortcode( wp_kses_post( $output ) );
 		}
 	}
 }

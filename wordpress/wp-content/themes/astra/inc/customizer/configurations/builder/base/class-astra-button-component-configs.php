@@ -3,8 +3,6 @@
  * Astra Theme Customizer Configuration Builder.
  *
  * @package     astra-builder
- * @author      Astra
- * @copyright   Copyright (c) 2020, Astra
  * @link        https://wpastra.com/
  * @since       3.0.0
  */
@@ -24,12 +22,12 @@ class Astra_Button_Component_Configs {
 	/**
 	 * Register Builder Customizer Configurations.
 	 *
-	 * @param Array  $configurations Configurations.
+	 * @param array  $configurations Configurations.
 	 * @param string $builder_type Builder Type.
 	 * @param string $section Section.
 	 *
 	 * @since 3.0.0
-	 * @return Array Astra Customizer Configurations with updated configurations.
+	 * @return array $configurations Astra Customizer Configurations with updated configurations.
 	 */
 	public static function register_configuration( $configurations, $builder_type = 'header', $section = 'section-hb-button-' ) {
 
@@ -398,16 +396,26 @@ class Astra_Button_Component_Configs {
 					'priority'          => 3,
 					'context'           => Astra_Builder_Helper::$general_tab,
 					'sanitize_callback' => array( 'Astra_Customizer_Sanitizes', 'sanitize_responsive_slider' ),
-					'suffix'            => array( 'px', 'em' ),
+					'suffix'            => array( 'px', 'em', 'vw', 'rem' ),
 					'input_attrs'       => array(
-						'px' => array(
+						'px'  => array(
 							'min'  => 0,
 							'step' => 1,
 							'max'  => 200,
 						),
-						'em' => array(
+						'em'  => array(
 							'min'  => 0,
 							'step' => 0.01,
+							'max'  => 20,
+						),
+						'vw'  => array(
+							'min'  => 0,
+							'step' => 0.1,
+							'max'  => 25,
+						),
+						'rem' => array(
+							'min'  => 0,
+							'step' => 0.1,
 							'max'  => 20,
 						),
 					),
@@ -454,7 +462,7 @@ class Astra_Button_Component_Configs {
 
 			$button_config[] = Astra_Builder_Base_Configuration::prepare_visibility_tab( $_section, $builder_type );
 
-			$button_config[] = Astra_Builder_Base_Configuration::prepare_advanced_tab( $_section );
+			$button_config[] = Astra_Extended_Base_Configuration::prepare_advanced_tab( $_section );
 
 		}
 

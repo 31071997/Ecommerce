@@ -3,8 +3,6 @@
  * WooCommerce Options for Astra Theme.
  *
  * @package     Astra
- * @author      Astra
- * @copyright   Copyright (c) 2020, Astra
  * @link        https://wpastra.com/
  * @since       Astra 1.1.0
  */
@@ -84,12 +82,35 @@ if ( ! class_exists( 'Astra_Woo_Shop_Cart_Layout_Configs' ) ) {
 				),
 			);
 
+			if ( defined( 'WC_VERSION' ) && version_compare( WC_VERSION, '8.3', '>=' ) ) {
+				$_configs[] = array(
+					'name'     => ASTRA_THEME_SETTINGS . '[woo-block-incompatible-cart-notice]',
+					'type'     => 'control',
+					'control'  => 'ast-description',
+					'section'  => 'section-woo-shop-cart',
+					'priority' => 1,
+					'label'    => '',
+					'help'     => '<p style="margin-bottom: 20px;>"><strong>' . __( 'Note:', 'astra' ) . '</strong>' . __( ' Certain Cart page options may not work smoothly on the block editor based Cart page. For best results with these features, prefer using a shortcode based Cart page.', 'astra' ) . '</p>',
+				);
+
+				$_configs[] = array(
+					'name'     => ASTRA_THEME_SETTINGS . '[woo-block-incompatible-checkout-notice]',
+					'type'     => 'control',
+					'control'  => 'ast-description',
+					'section'  => 'woocommerce_checkout',
+					'priority' => 1,
+					'label'    => '',
+					'help'     => '<p style="margin-bottom: 20px;>"><strong>' . __( 'Note:', 'astra' ) . '</strong>' . __( ' Certain Checkout page options may not work smoothly on the block editor based Checkout page. For best results with these features, prefer using a shortcode-based Checkout page.', 'astra' ) . '</p>',
+				);
+			}
+
 			if ( astra_showcase_upgrade_notices() ) {
 				// Learn More link if Astra Pro is not activated.
 				$_configs[] = array(
 					'name'     => ASTRA_THEME_SETTINGS . '[ast-woo-cart-pro-items]',
 					'type'     => 'control',
 					'control'  => 'ast-upgrade',
+					'campaign' => 'woocommerce',
 					'renderAs' => 'list',
 					'choices'  => array(
 						'two'   => array(
@@ -114,6 +135,7 @@ if ( ! class_exists( 'Astra_Woo_Shop_Cart_Layout_Configs' ) ) {
 					'name'     => ASTRA_THEME_SETTINGS . '[ast-woo-checkout-pro-items]',
 					'type'     => 'control',
 					'control'  => 'ast-upgrade',
+					'campaign' => 'woocommerce',
 					'renderAs' => 'list',
 					'choices'  => array(
 						'two'   => array(

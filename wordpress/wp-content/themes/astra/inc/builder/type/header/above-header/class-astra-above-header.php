@@ -3,8 +3,6 @@
  * Above Header.
  *
  * @package     astra-builder
- * @author      Brainstorm Force
- * @copyright   Copyright (c) 2020, Brainstorm Force
  * @link        https://www.brainstormforce.com
  * @since       3.0.0
  */
@@ -31,7 +29,7 @@ class Astra_Above_Header {
 		require_once ASTRA_ABOVE_HEADER_DIR . '/class-astra-above-header-loader.php';
 
 		// Include front end files.
-		if ( ! is_admin() ) {
+		if ( ! is_admin() || Astra_Builder_Customizer::astra_collect_customizer_builder_data() ) {
 			require_once ASTRA_ABOVE_HEADER_DIR . '/dynamic-css/dynamic.css.php';
 		}
 		// @codingStandardsIgnoreEnd WPThemeReview.CoreFunctionality.FileInclude.FileIncludeFound
